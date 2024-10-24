@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "undefined/subscriptions/86e7d9bf-d70a-4444-bdd9-7f7f39f9d65c/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/thuto-chat",
+    "appService.deploySubpath": "."
+}

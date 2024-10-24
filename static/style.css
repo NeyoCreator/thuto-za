@@ -1,0 +1,130 @@
+/* Base Styles */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+header {
+    text-align: center;
+    padding: 1rem 0;
+}
+
+main {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+article {
+    margin-bottom: 20px;
+}
+
+/* Theme Selector Styles */
+#theme-selector {
+    text-align: center;
+    margin: 20px 0;
+}
+
+#theme-selector label {
+    margin: 0 10px;
+    cursor: pointer;
+}
+
+/* Contact Form Styling */
+#contact {
+    text-align: center;
+}
+
+#contact input,
+#contact textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+#contact textarea {
+    height: 120px;
+}
+
+#contact input[type="submit"] {
+    cursor: pointer;
+}
+
+/* Footer Styling */
+footer {
+    text-align: center;
+    padding: 1rem 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+}
+
+/* Light Theme (default) */
+body.light-theme {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+body.light-theme header {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+body.light-theme main {
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme footer {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+/* Dark Theme */
+body.dark-theme {
+    background-color: #333;
+    color: #f4f4f4;
+}
+
+body.dark-theme header {
+    background-color: #222;
+    color: #f4f4f4;
+}
+
+body.dark-theme main {
+    background-color: #444;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-theme footer {
+    background-color: #222;
+    color: #f4f4f4;
+}
+
+/* Minimalistic & Elegant Theme */
+body.minimal-theme {
+    background-color: #fff;
+    color: #333;
+    font-family: 'Georgia', serif;
+}
+
+body.minimal-theme header {
+    background-color: #fff;
+    color: #333;
+    border-bottom: 1px solid #ddd;
+}
+
+body.minimal-theme main {
+    background-color: #fff;
+    box-shadow: none;
+}
+
+body.minimal-theme footer {
+    background-color: #fff;
+    color: #333;
+    border-top: 1px solid #ddd;
+}
