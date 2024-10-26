@@ -107,7 +107,7 @@ def chat():
         logger.debug(f"User data for {user_id} has been reset after website generation.")
 
         return jsonify({
-            "message": "Your website has been generated! You can view it using the following link: http://localhost:5000/view_website",
+            "message": "Your website has been generated! You can view it using the following link: https://thuto-chat.azurewebsites.net/view_website",
             "link": "/view_website",
             "phase": 5
         })
