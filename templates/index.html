@@ -16,10 +16,15 @@
     </div>
     <div class="suggestions" id="suggestions"></div>
     <div class="input-area">
-        <input id="user-input" type="text" placeholder="Type your message...">
+        <input id="user-value" type="text" placeholder="Type your message...">
         <button id="send-btn">Send</button>
     </div>
 </div>
+</div>
+
+<!-- Loading Spinner Overlay -->
+<div id="loading-overlay">
+    <div class="loader"></div>
 </div>
 
 <!-- Add Google Fonts Link -->
@@ -29,20 +34,20 @@
     /* General Styles */
     body {
         font-family: 'Roboto', sans-serif;
-        background-color: #F3F4F6; /* Light Gray */
-        color: #00008B; /* Dark Blue */
+        background-color: #F3F4F6;
+        color: #00008B;
     }
 
     .main-heading {
-        font-family: 'Russo One', sans-serif; /* Heading Font */
-        color: #0000FF; /* Primary Blue */
+        font-family: 'Russo One', sans-serif;
+        color: #0000FF;
         text-align: center;
         margin-bottom: 5px;
     }
 
     .subtitle {
-        font-family: 'Roboto', sans-serif; /* Subtitle Font */
-        color: #1F2937; /* Dark Gray */
+        font-family: 'Roboto', sans-serif;
+        color: #1F2937;
         text-align: center;
         font-size: 18px;
         margin-bottom: 20px;
@@ -60,15 +65,15 @@
         justify-content: center;
         margin: 0 10px;
         padding: 10px 20px;
-        border-radius: 25px; /* Pill shape */
-        background-color: #E0E7FF; /* Light Blue */
-        color: #1F2937; /* Dark Gray */
+        border-radius: 25px;
+        background-color: #E0E7FF;
+        color: #1F2937;
         font-weight: bold;
         transition: background-color 0.3s ease;
     }
 
     .step.active {
-        background-color: #0000FF; /* Primary Blue */
+        background-color: #0000FF;
         color: white;
     }
 
@@ -76,7 +81,7 @@
         max-width: 600px;
         margin: 0 auto;
         padding: 20px;
-        background-color: #FFFFFF; /* White background */
+        background-color: #FFFFFF;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         border-radius: 8px;
     }
@@ -88,37 +93,10 @@
         border-bottom: 1px solid #ddd;
     }
 
-    .chat-message {
-        padding: 15px 20px; /* Increased padding */
-        border-radius: 20px; /* Rounded corners */
-        margin: 5px 0; /* Margin between messages */
-        max-width: 75%; /* Limit message width */
-        word-wrap: break-word; /* Allow long words to wrap */
-    }
-
-    .user-message {
-        background-color: #E0E7FF; /* Light Blue for user messages */
-        border-top-left-radius: 20px; /* Rounded top-left corner */
-        border-top-right-radius: 20px; /* Rounded top-right corner */
-        border-bottom-right-radius: 0px; /* Square bottom-right corner */
-        border-bottom-left-radius: 20px; /* Square bottom-left corner */
-        align-self: flex-end; /* Align user messages to the right */
-    }
-
-    .bot-message {
-        background-color: #1E90FF; /* Secondary Blue for bot messages */
-        color: white;
-        border-top-left-radius: 0; /* Square top-left corner */
-        border-top-right-radius: 20px; /* Rounded top-right corner */
-        border-bottom-right-radius: 20px; /* Rounded bottom-right corner */
-        border-bottom-left-radius: 20px; /* Rounded bottom-left corner */
-        align-self: flex-start; /* Align bot messages to the left */
-    }
-
     .input-area {
         display: flex;
         padding: 10px;
-        background-color: #E0E7FF; /* Light Blue background */
+        background-color: #E0E7FF;
         border-radius: 8px;
         margin-top: 10px;
     }
@@ -126,20 +104,20 @@
     .input-area input {
         flex: 1;
         padding: 10px;
-        border: 1px solid #D1D5DB; /* Light Gray border */
+        border: 1px solid #D1D5DB;
         border-radius: 20px;
         box-shadow: inset 0px 2px 4px rgba(0, 0, 0, 0.05);
         transition: border-color 0.2s ease;
     }
 
     .input-area input:focus {
-        border-color: #0000FF; /* Primary Blue */
+        border-color: #0000FF;
         outline: none;
     }
 
     .input-area button {
         padding: 10px 20px;
-        background-color: #1E90FF; /* Secondary Blue */
+        background-color: #1E90FF;
         color: white;
         border: none;
         border-radius: 20px;
@@ -150,7 +128,7 @@
     }
 
     .input-area button:hover {
-        background-color: #0000FF; /* Primary Blue on hover */
+        background-color: #0000FF;
         box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
     }
 
@@ -170,7 +148,7 @@
 
     .loader {
         border: 5px solid #f3f3f3;
-        border-top: 5px solid #0000FF; /* Primary Blue */
+        border-top: 5px solid #0000FF;
         border-radius: 50%;
         width: 50px;
         height: 50px;
@@ -181,55 +159,43 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
-    /* Mobile Responsiveness */
-    @media (max-width: 768px) {
-        .stepper {
-            flex-direction: row;
-            padding: 16px;
-        }
-
-        .chat-container {
-            padding: 20px;
-        }
-
-        .input-area {
-            flex-direction: column;
-        }
-
-        .input-area input {
-            margin-bottom: 10px;
-        }
-
-        .input-area button {
-            width: 100%;
-        }
-
-        #chat-window {
-            height: 250px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .input-area input {
-            padding: 8px;
-        }
-
-        .input-area button {
-            padding: 8px 15px;
-        }
-
-        .chat-container {
-            padding: 15px;
-        }
-
-        #chat-window {
-            height: 200px;
-        }
-        .main-container {
-  padding-left: 32px;
-  padding-right: 32px;
-}
-    }
 </style>
+
+<!-- <script>
+    function linkify(text) {
+        const urlPattern = /(https?:\/\/[^\s]+)/g;
+        return text.replace(
+            urlPattern,
+            '<a href="$1" target="_blank" style="color: #0000FF; text-decoration: underline; font-weight: bold;">$1</a>'
+        );
+    }
+
+    function addMessage(text, sender) {
+        const messageContainer = document.createElement('div');
+        messageContainer.classList.add('chat-message', sender === 'user' ? 'user-message' : 'bot-message');
+        messageContainer.innerHTML = linkify(text);
+        document.getElementById('messages').appendChild(messageContainer);
+    }
+
+    function toggleLoading(show) {
+        document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+    }
+
+    document.getElementById('send-btn').addEventListener('click', () => {
+        const userInput = document.getElementById('user-input');
+        const message = userInput.value;
+        
+        if (message.trim() !== "") {
+            addMessage(message, 'user');
+            userInput.value = "";
+            toggleLoading(true); // Show loading spinner
+            
+            setTimeout(() => {
+                addMessage("Here's a link: http://127.0.0.1:5000/view_website", 'bot');
+                toggleLoading(false); // Hide loading spinner after message
+            }, 2000);
+        }
+    });
+</script> -->
+
 {% endblock %}

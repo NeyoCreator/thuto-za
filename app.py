@@ -41,17 +41,25 @@ def chat():
     user_input = request.json.get("message")
     user_id = request.json.get("user_id")
 
+    # Log the received input
+    logger.debug(f"Received input from user {user_id}: {user_input}")
+
     # Initialize session for new user
     if user_id not in user_data:
+        logger.debug(f"Initializing session for new user: {user_id}")
         user_data[user_id] = {"phase": 1, "responses": {}}
+    else:
+        logger.debug(f"User {user_id} already exists. Current phase: {user_data[user_id]['phase']}")
 
     phase = user_data[user_id]["phase"]
+    logger.debug(f"Current phase for user {user_id}: {phase}")
 
     if phase == 1:
         user_data[user_id]["responses"]["website_type"] = user_input
         user_data[user_id]["phase"] = 2
+        logger.info(f"Phase 1 completed. User {user_id} selected website type: {user_input}")
         return jsonify({
-            "message": "Please seleet the background theme of your website.",
+            "message": "Please select the background theme of your website.",
             "suggestions": color_palettes,
             "nextStep": 2
         })
@@ -59,6 +67,7 @@ def chat():
     elif phase == 2:
         user_data[user_id]["responses"]["color_palette"] = user_input
         user_data[user_id]["phase"] = 3
+        logger.info(f"Phase 2 completed. User {user_id} selected color palette: {user_input}")
         return jsonify({
             "message": "Please select the main colour of your website.",
             "suggestions": functionality_options,
@@ -68,6 +77,7 @@ def chat():
     elif phase == 3:
         user_data[user_id]["responses"]["functionality"] = user_input
         user_data[user_id]["phase"] = 4
+        logger.info(f"Phase 3 completed. User {user_id} selected functionality: {user_input}")
         return jsonify({
             "message": "Is there any additional information you'd like to add about your website?",
             "phase": 4,
@@ -77,22 +87,27 @@ def chat():
     elif phase == 4:
         user_data[user_id]["responses"]["additional_info"] = user_input
         response_summary = user_data[user_id]["responses"]
+        logger.info(f"Phase 4 completed. User {user_id} provided additional info: {user_input}")
 
         # Generate the website
         website_title = f"{response_summary['website_type']} Website"
         website_description = f"A {response_summary['color_palette']} {response_summary['website_type']} website with {response_summary['functionality']} functionality. {response_summary['additional_info']}"
-        
+        logger.debug(f"Generating website with title: {website_title} and description: {website_description}")
+
         generated_files = generate_website_files(website_title, website_description)
         if generated_files:
             populate_user_website(generated_files)
+            logger.info(f"Website generated successfully for user {user_id}.")
         else:
+            logger.error("There was an error generating the website.")
             return jsonify({"message": "There was an error generating the website."}), 500
 
         # Reset the user data after completion
         user_data.pop(user_id, None)
+        logger.debug(f"User data for {user_id} has been reset after website generation.")
 
         return jsonify({
-            "message": "Your website has been generated! You can view it using the following link:",
+            "message": "Your website has been generated! You can view it using the following link: http://localhost:5000/view_website",
             "link": "/view_website",
             "phase": 5
         })
@@ -203,6 +218,7 @@ def create_flask_app(website_title, generated_files):
 def generate_website_files(website_title, website_description):
     api_key = os.getenv("GOOGLE_API_KEY")
     llm = GoogleGenerativeAI(model="gemini-1.5-pro-latest", api_key=api_key)
+    print("website description :", website_description)
     prompt = f"""
     Generate a simple website with HTML and CSS:
     - Title: "{website_title}"
