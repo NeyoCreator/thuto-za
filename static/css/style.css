@@ -70,13 +70,20 @@ header {
 }
 
 .bot-message {
-    background-color: #d1e7ff;
+    background-color: #1E90FF ;
+    /* 1E90FF */
     align-self: flex-start;
+    padding: 16px;
+    border-radius: 8px;
+    color: white;
+
 }
 
 .user-message {
-    background-color: #cfe9cc;
+    background-color: #d1e7ff;
     align-self: flex-end;
+    padding: 16px;
+    border-radius: 8px;
 }
 
 .input-area {

@@ -3,26 +3,39 @@ let currentStep = 0;
 document.addEventListener('DOMContentLoaded', function() {
     updateStepper(1);
     let initialMessage = "Welcome! What type of website would you like to create?";
-    appendMessage(initialMessage, "bot-message");
+    addMessage(initialMessage, "bot-message");
     addSuggestionButtons(["Portfolio/CV", "Blog", "Landing Page"]);
 });
 
 // Event listener for user message sending
 document.getElementById('send-btn').addEventListener('click', function() {
-    let message = document.getElementById('user-input').value;
+    const userInput = document.getElementById('user-value');
+    const message = userInput.value;
+    
     if (message.trim() !== "") {
-        appendMessage(message, "user-message");
+        addMessage(message, "user-message");
+        userInput.value = "";  // Clear input
+        toggleLoading(true); // Show loading spinner
+
         sendMessageToBot(message);
-        document.getElementById('user-input').value = "";  // Clear input
     }
 });
 
-// Function to append messages to the chat window
-function appendMessage(text, className) {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', className);
-    messageDiv.textContent = text;
-    document.getElementById('messages').appendChild(messageDiv);
+// Function to linkify URLs in text
+function linkify(text) {
+    const urlPattern = /(https?:\/\/[^\s]+)/g;
+    return text.replace(
+        urlPattern,
+        '<a href="$1" target="_blank" style="color: #0000FF; text-decoration: underline; font-weight: bold;">$1</a>'
+    );
+}
+
+// Function to append messages to the chat window with linkify support
+function addMessage(text, sender) {
+    const messageContainer = document.createElement('div');
+    messageContainer.classList.add('chat-message', sender === 'user-message' ? 'user-message' : 'bot-message');
+    messageContainer.innerHTML = linkify(text);
+    document.getElementById('messages').appendChild(messageContainer);
     document.getElementById('chat-window').scrollTop = document.getElementById('chat-window').scrollHeight;
 }
 
@@ -37,7 +50,7 @@ function addSuggestionButtons(suggestions) {
         button.addEventListener('click', function() {
             // Toggle 'selected' class on clicked button
             this.classList.toggle('selected');
-            appendMessage(suggestion, "user-message");
+            addMessage(suggestion, "user-message");
             sendMessageToBot(suggestion);
         });
         buttonsContainer.appendChild(button);
@@ -62,7 +75,7 @@ function sendMessageToBot(message) {
     })
     .then(response => response.json())
     .then(data => {
-        appendMessage(data.message, 'bot-message');
+        addMessage(data.message, 'bot-message');
         
         if (data.suggestions && Array.isArray(data.suggestions)) {
             addSuggestionButtons(data.suggestions);
@@ -74,9 +87,12 @@ function sendMessageToBot(message) {
         if (data.nextStep) {
             updateStepper(data.nextStep);
         }
+        
+        toggleLoading(false); // Hide loading spinner after response
     })
     .catch(error => {
         console.error('Error:', error);
+        toggleLoading(false); // Hide loading spinner on error
     });
 }
 
@@ -100,4 +116,8 @@ function showTextInput() {
     inputArea.style.display = 'flex';
     const userInput = document.getElementById('user-input');
     userInput.focus();
+}
+
+function toggleLoading(show) {
+    document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
 }
