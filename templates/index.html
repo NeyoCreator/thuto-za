@@ -16,9 +16,13 @@
     </div>
     <div class="suggestions" id="suggestions"></div>
     <div class="input-area">
-        <input id="user-value" type="text" placeholder="Type your message...">
-        <button id="send-btn">Send</button>
+        <!-- <input id="user-value" type="text" placeholder="Type your message..."> -->
+        <textarea id="user-value" placeholder="Type your message..." rows="4"></textarea>
+        <button id="send-btn">Generate</button>
     </div>
+
+
+
 </div>
 </div>
 
@@ -101,7 +105,27 @@
         margin-top: 10px;
     }
 
-    .input-area input {
+    #user-value {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: none; /* Prevents resizing */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s ease;
+}
+
+#user-value:focus {
+    border-color: #007bff; /* Focus color */
+    outline: none;
+}
+
+#send-btn:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+
+    .input-area textarea {
         flex: 1;
         padding: 10px;
         border: 1px solid #D1D5DB;

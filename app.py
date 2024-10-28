@@ -65,9 +65,9 @@ def chat():
         })
 
     elif phase == 2:
-        user_data[user_id]["responses"]["color_palette"] = user_input
+        user_data[user_id]["responses"]["main_colour"] = user_input
         user_data[user_id]["phase"] = 3
-        logger.info(f"Phase 2 completed. User {user_id} selected color palette: {user_input}")
+        logger.info(f"Phase 2 completed. User {user_id} selected the main colour: {user_input}")
         return jsonify({
             "message": "Please select the main colour of your website.",
             "suggestions": functionality_options,
@@ -75,7 +75,7 @@ def chat():
         })
 
     elif phase == 3:
-        user_data[user_id]["responses"]["functionality"] = user_input
+        user_data[user_id]["responses"]["content"] = user_input
         user_data[user_id]["phase"] = 4
         logger.info(f"Phase 3 completed. User {user_id} selected functionality: {user_input}")
         return jsonify({
@@ -91,7 +91,10 @@ def chat():
 
         # Generate the website
         website_title = f"{response_summary['website_type']} Website"
-        website_description = f"A {response_summary['color_palette']} {response_summary['website_type']} website with {response_summary['functionality']} functionality. {response_summary['additional_info']}"
+        website_description = f"Could you generate a {response_summary['website_type']} website. Make it have the {response_summary['main_colour']} as the primary colour and als generate a color pallet that matches. It should have {response_summary['content']} as its conten"
+        website_metadata = [{"website_type":response_summary['website_type']},["main_colour"]]
+        logger.debug(f"Website metadata: {website_metadata}")
+
         logger.debug(f"Generating website with title: {website_title} and description: {website_description}")
 
         generated_files = generate_website_files(website_title, website_description)
@@ -107,7 +110,9 @@ def chat():
         logger.debug(f"User data for {user_id} has been reset after website generation.")
 
         return jsonify({
-            "message": "Your website has been generated! You can view it using the following link: https://thuto-chat.azurewebsites.net/view_website",
+            # "message": "Your website has been generated! You can view it using the following link: https://thuto-chat.azurewebsites.net/view_website",
+            "message": "Your website has been generated! You can view it using the following link: http://localhost:5000//view_website",
+            
             "link": "/view_website",
             "phase": 5
         })
@@ -115,16 +120,671 @@ def chat():
 def generate_website_files(website_title, website_description):
     api_key = os.getenv("GOOGLE_API_KEY")
     llm = GoogleGenerativeAI(model="gemini-1.5-pro-latest", api_key=api_key)
+    
+    portfolio=""""
+        <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>My Portfolio</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <header>
+            <h1>Neo M</h1>
+            <p>Software Engineer & Web Developer</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#about">About Me</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <section id="about">
+            <h2>About Me</h2>
+            <p>Hello! I'm Neo, a passionate web developer with experience in creating responsive and modern websites. My journey started with building small applications, and now I'm focused on helping businesses grow through digital solutions.</p>
+        </section>
+
+        <section id="skills">
+            <h2>Skills</h2>
+            <div class="skills-grid">
+                <div>HTML</div>
+                <div>CSS</div>
+                <div>JavaScript</div>
+                <div>React</div>
+                <div>Python</div>
+                <div>Flask</div>
+                <div>SQL</div>
+                <div>Firebase</div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <h2>Projects</h2>
+            <div class="project-grid">
+                <div class="project">
+                    <h3>Project 1</h3>
+                    <p>A website builder designed for small businesses.</p>
+                </div>
+                <div class="project">
+                    <h3>Project 2</h3>
+                    <p>An AI-driven chatbot that provides customer support.</p>
+                </div>
+                <div class="project">
+                    <h3>Project 3</h3>
+                    <p>A platform that automates IT audit tasks for efficiency.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact">
+            <h2>Contact Me</h2>
+            <p>If you'd like to work together or just say hello, feel free to reach out!</p>
+            <button><a href="mailto:neo@example.com">Send Email</a></button>
+        </section>
+
+        <footer>
+            <p>&copy; 2024 Neo M. All rights reserved.</p>
+        </footer>
+    </body>
+    </html>
+    ============
+    /* Reset */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* General Styles */
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f9;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+
+    /* Header */
+    header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    header h1 {
+        font-size: 2.5em;
+        color: #444;
+    }
+
+    header p {
+        font-size: 1.2em;
+        color: #666;
+    }
+
+    /* Navigation */
+    nav {
+        margin: 20px 0;
+    }
+
+    nav ul {
+        display: flex;
+        list-style: none;
+        gap: 15px;
+    }
+
+    nav ul li a {
+        text-decoration: none;
+        color: #444;
+        font-weight: bold;
+    }
+
+    nav ul li a:hover {
+        color: #007bff;
+    }
+
+    /* Sections */
+    section {
+        margin: 40px 0;
+        width: 100%;
+        max-width: 800px;
+        text-align: center;
+    }
+
+    section h2 {
+        font-size: 1.8em;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    section p {
+        color: #666;
+    }
+
+    /* Skills Section */
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .skills-grid div {
+        padding: 10px;
+        background: #007bff;
+        color: white;
+        border-radius: 5px;
+    }
+
+    /* Projects Section */
+    .project-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 10px;
+    }
+
+    .project {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .project h3 {
+        font-size: 1.2em;
+        color: #333;
+    }
+
+    .project p {
+        font-size: 0.9em;
+        color: #555;
+    }
+
+    /* Contact Section */
+    button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+
+    button a {
+        text-decoration: none;
+        color: white;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+
+    /* Footer */
+    footer {
+        margin-top: 40px;
+        text-align: center;
+        color: #777;
+    }
+
+
+        """
+
+
+    blog="""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>My Blog</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <header>
+            <h1>Neo's Blog</h1>
+            <p>Insights, stories, and updates from my journey in tech.</p>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#about">About</a></li>
+                <li><a href="#posts">Blog Posts</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <section id="about">
+            <h2>About Me</h2>
+            <p>Hello! I'm Neo, a software engineer with a passion for coding, learning, and sharing knowledge. Through this blog, I share my insights and experiences on topics ranging from web development to AI.</p>
+        </section>
+
+        <section id="posts">
+            <h2>Latest Blog Posts</h2>
+            <div class="post">
+                <h3>Understanding Responsive Design</h3>
+                <p>Responsive design is essential for modern web development. In this post, I'll cover the basics of making your website adaptable to different screen sizes...</p>
+                <button><a href="#">Read More</a></button>
+            </div>
+            <div class="post">
+                <h3>Getting Started with React Native</h3>
+                <p>React Native is a popular framework for building mobile apps. Here’s a beginner’s guide to get you up and running...</p>
+                <button><a href="#">Read More</a></button>
+            </div>
+            <div class="post">
+                <h3>The Power of Flask for Back-end Development</h3>
+                <p>Flask is a lightweight web framework for Python. In this article, I explore why Flask is a great choice for backend projects...</p>
+                <button><a href="#">Read More</a></button>
+            </div>
+        </section>
+
+        <section id="contact">
+            <h2>Contact</h2>
+            <p>Have questions or want to connect? Feel free to reach out!</p>
+            <button><a href="mailto:neo@example.com">Send Email</a></button>
+        </section>
+
+        <footer>
+            <p>&copy; 2024 Neo's Blog. All rights reserved.</p>
+        </footer>
+    </body>
+    </html>
+    =============
+    /* Reset */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* General Styles */
+    body {
+        font-family: Arial, sans-serif;
+        color: #333;
+        background-color: #f4f4f9;
+        line-height: 1.6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+
+    /* Header */
+    header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    header h1 {
+        font-size: 2.5em;
+        color: #444;
+    }
+
+    header p {
+        font-size: 1.2em;
+        color: #666;
+    }
+
+    /* Navigation */
+    nav {
+        margin: 20px 0;
+    }
+
+    nav ul {
+        display: flex;
+        list-style: none;
+        gap: 15px;
+    }
+
+    nav ul li a {
+        text-decoration: none;
+        color: #444;
+        font-weight: bold;
+    }
+
+    nav ul li a:hover {
+        color: #007bff;
+    }
+
+    /* Sections */
+    section {
+        margin: 40px 0;
+        width: 100%;
+        max-width: 800px;
+        text-align: center;
+    }
+
+    section h2 {
+        font-size: 1.8em;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    section p {
+        color: #666;
+    }
+
+    /* Blog Posts Section */
+    .post {
+        background: #e9ecef;
+        padding: 20px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .post h3 {
+        font-size: 1.5em;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .post p {
+        font-size: 1em;
+        color: #555;
+        margin-bottom: 10px;
+    }
+
+    button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+    }
+
+    button a {
+        text-decoration: none;
+        color: white;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+
+    /* Footer */
+    footer {
+        margin-top: 40px;
+        text-align: center;
+        color: #777;
+    }
+
+        """
+        
+        
+    landingpage="""
+        <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Landing Page</title>
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <header>
+            <h1>Welcome to Neo's Solutions</h1>
+            <p>Your partner in building digital success.</p>
+            <button><a href="#features">Learn More</a></button>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#testimonials">Testimonials</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+
+        <section id="features">
+            <h2>Features</h2>
+            <div class="features-grid">
+                <div class="feature">
+                    <h3>Custom Websites</h3>
+                    <p>Beautiful, responsive websites designed to elevate your brand.</p>
+                </div>
+                <div class="feature">
+                    <h3>Mobile Applications</h3>
+                    <p>Cross-platform mobile apps tailored to your business needs.</p>
+                </div>
+                <div class="feature">
+                    <h3>AI Solutions</h3>
+                    <p>Unlock the power of AI to streamline and scale your business operations.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="testimonials">
+            <h2>What Our Clients Say</h2>
+            <div class="testimonial">
+                <p>"Neo's Solutions transformed our online presence with a stunning website!"</p>
+                <span>- Alex, Business Owner</span>
+            </div>
+            <div class="testimonial">
+                <p>"Their mobile app development is top-notch. We've seen a 30% increase in customer engagement."</p>
+                <span>- Taylor, Startup Founder</span>
+            </div>
+            <div class="testimonial">
+                <p>"The AI solutions provided by Neo's team have saved us countless hours and improved productivity."</p>
+                <span>- Jordan, Operations Manager</span>
+            </div>
+        </section>
+
+        <section id="contact">
+            <h2>Get in Touch</h2>
+            <p>Ready to take your business to the next level? Contact us today!</p>
+            <button><a href="mailto:neo@example.com">Contact Us</a></button>
+        </section>
+
+        <footer>
+            <p>&copy; 2024 Neo's Solutions. All rights reserved.</p>
+        </footer>
+    </body>
+    </html>
+    ==========================================
+    /* Reset */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    /* General Styles */
+    body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f4f9;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+
+    /* Header */
+    header {
+        text-align: center;
+        padding: 60px 20px;
+        background-color: #007bff;
+        color: white;
+        border-radius: 5px;
+    }
+
+    header h1 {
+        font-size: 2.5em;
+    }
+
+    header p {
+        font-size: 1.2em;
+        margin-top: 10px;
+    }
+
+    header button {
+        padding: 10px 20px;
+        background: white;
+        color: #007bff;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    header button a {
+        text-decoration: none;
+        color: #007bff;
+    }
+
+    header button:hover {
+        background: #0056b3;
+        color: white;
+    }
+
+    /* Navigation */
+    nav {
+        margin: 20px 0;
+    }
+
+    nav ul {
+        display: flex;
+        list-style: none;
+        gap: 15px;
+    }
+
+    nav ul li a {
+        text-decoration: none;
+        color: #444;
+        font-weight: bold;
+    }
+
+    nav ul li a:hover {
+        color: #007bff;
+    }
+
+    /* Features Section */
+    #features {
+        text-align: center;
+        margin: 40px 0;
+        width: 100%;
+        max-width: 800px;
+    }
+
+    #features h2 {
+        font-size: 1.8em;
+        color: #333;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .feature {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature h3 {
+        font-size: 1.2em;
+        color: #333;
+    }
+
+    /* Testimonials Section */
+    #testimonials {
+        text-align: center;
+        margin: 40px 0;
+        width: 100%;
+        max-width: 800px;
+    }
+
+    #testimonials h2 {
+        font-size: 1.8em;
+        color: #333;
+    }
+
+    .testimonial {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f4f4f9;
+        border-left: 4px solid #007bff;
+        color: #555;
+    }
+
+    .testimonial span {
+        display: block;
+        margin-top: 10px;
+        font-size: 0.9em;
+        color: #777;
+    }
+
+    /* Contact Section */
+    #contact {
+        text-align: center;
+        margin: 40px 0;
+        width: 100%;
+        max-width: 800px;
+    }
+
+    button {
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1em;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+
+    button a {
+        text-decoration: none;
+        color: white;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+
+    /* Footer */
+    footer {
+        margin-top: 40px;
+        text-align: center;
+        color: #777;
+    }
+        """
+            
+            
+            
     prompt = f"""
     Generate a simple website with HTML and CSS:
-    - Title: "{website_title}"
-    - Description: "{website_description}"
+
+    - Description: "{website_description}".
+
+    If the user stated that they wanted a Portfolio use the following content as a guide : {portfolio},
+    If the user stated that they wanted a blog use the following content as a guide : {blog},
+    If the user stated that they wanted a landingpage use the following content as a guide : {landingpage},
 
     Provide the output as a JSON object with two fields:
     1. 'html': The HTML content of the webpage.
     2. 'css': The CSS content for styling the webpage.
     """
 
+    
     response = llm.invoke(prompt)
     try:
         print("Response: ", response)
@@ -330,6 +990,29 @@ def create_flask_app(website_title, generated_files):
         logger.info("Wrote default style.css")
     
     logger.info(f"Flask app creation for {website_title} completed")
+
+
+# Endpoint to handle chat updates and modify userwebsite.html
+@app.route('/update_website', methods=['POST'])
+def update_website():
+    data = request.json
+    instruction = data.get("instruction", "")
+
+    # Example logic to modify HTML content based on instruction
+    # You could expand this to recognize specific instructions
+    with open(USER_WEBSITE_TEMPLATE, 'r+') as f:
+        content = f.read()
+        # Replace or append HTML based on the instruction
+        if "change title" in instruction.lower():
+            new_title = instruction.split("change title to ")[1]
+            content = content.replace("<title>.*</title>", f"<title>{new_title}</title>")
+        # Other modifications can be added here
+        f.seek(0)
+        f.write(content)
+        f.truncate()
+
+    return jsonify({"message": "Website updated successfully!"})
+
 
 if __name__ == '__main__':
     logger.info("Starting the Flask application")
