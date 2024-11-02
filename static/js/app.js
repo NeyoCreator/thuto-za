@@ -121,3 +121,34 @@ function showTextInput() {
 function toggleLoading(show) {
     document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
 }
+
+// Function to send user instruction to update the website
+function updateWebsiteContent(instruction) {
+    fetch('/update_website', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ instruction })
+    })
+    .then(response => response.json())
+    .then(data => {
+        addMessage(data.message, 'bot-message');
+        refreshPreview(); // Refresh the preview after update
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Event listener for user input to update the website
+document.getElementById('send-btn').addEventListener('click', function() {
+    const userInstruction = document.getElementById('user-value').value;
+    addMessage(userInstruction, "user-message");
+    updateWebsiteContent(userInstruction);
+});
+
+// Function to refresh the iframe preview of the generated website
+function refreshPreview() {
+    const previewFrame = document.getElementById('preview-frame');
+    previewFrame.src = previewFrame.src;
+}
+

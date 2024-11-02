@@ -9,6 +9,22 @@
 <body>
     <main>
         {% block content %}{% endblock %}
+
+        <div class="main-container">
+            <div class="chat-container">
+                <div id="chat-window">
+                    <div id="messages"></div>
+                </div>
+                <textarea id="user-value" placeholder="Describe the change..."></textarea>
+                <button id="send-btn">Update Website</button>
+            </div>
+        
+            <!-- Preview Section -->
+            <div class="preview-container">
+                <iframe id="preview-frame" src="/view_website" width="100%" height="600"></iframe>
+            </div>
+        </div>
+        
     </main>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

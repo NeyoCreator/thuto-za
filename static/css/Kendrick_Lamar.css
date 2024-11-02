@@ -1,0 +1,56 @@
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa; /* Light mode background */
+            color: #212529;
+            padding: 16px; /* Base padding */
+        }
+        .hero {
+            background-color: #FF0000; /* Specified color */
+            color: white;
+            padding: 32px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out; /* Fade-in animation */
+        }
+        .img-container {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 32px;
+            flex-wrap: wrap; /* For mobile responsiveness */
+        }
+
+        .img-container img {
+            width: 100%; /* Make images responsive */
+            max-width: 300px; /* Limit image width */
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease; /* Add hover effect */
+        }
+        .img-container img:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .btn-primary {
+            background-color: #FF0000;
+            border-color: #FF0000;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 16px;
+            }
+        }
+
+    

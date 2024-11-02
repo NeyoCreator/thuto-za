@@ -1,0 +1,59 @@
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #fff;
+            color: #333; 
+        }
+        .hero {
+            background-color: #FFA500; /* Your specified color */
+            padding: 64px 32px; /* Multiples of 8px */
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            color: white;
+            animation: fadeInUp 1s ease-in-out;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            color: white;
+            margin-top: 16px;
+            animation: fadeInUp 1.2s ease-in-out;
+        }
+
+        .img-container {
+            padding: 32px;
+            overflow: hidden;
+        }
+        .img-container img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            animation: fadeIn 1s ease-in-out;
+            transition: transform 0.3s ease; /* For hover effect */
+        }
+        .img-container img:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    

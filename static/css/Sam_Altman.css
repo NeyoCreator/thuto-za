@@ -1,0 +1,47 @@
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa; /* Light mode background */
+            color: #343a40; /* Dark text for contrast */
+        }
+        .hero {
+            background-color: #FFA500;
+            color: white;
+            padding: 64px 16px; /* Multiples of 8px padding */
+            text-align: center;
+        }
+        .hero-image {
+          width: 200px;
+          height: 200px;
+          border-radius: 50%; /* Make it circular */
+          object-fit: cover; /* Maintain aspect ratio and cover the area */
+          margin: 32px auto; /* Center the image */
+          animation: pulse 2s infinite; /* Add a pulse animation */
+        }
+
+        @keyframes pulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+
+        .section {
+            padding: 64px 16px;
+        }
+        .icon-link {
+          display: inline-flex;
+          align-items: center;
+          text-decoration: none;
+          color: #343a40;
+          margin-right: 16px;
+          transition: color 0.3s; /* Smooth color transition on hover */
+        }
+        .icon-link:hover {
+          color: #FFA500;
+        }
+        .icon-link .material-symbols-outlined {
+          margin-right: 8px;
+          font-size: 20px;
+          vertical-align: middle;
+        }
+    
