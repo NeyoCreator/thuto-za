@@ -103,7 +103,6 @@ python-jobspy==1.1.65
 python-jwt==4.1.0
 python-socketio==5.11.4
 pytz==2024.1
-pywin32==307
 PyYAML==6.0.1
 regex==2024.7.24
 requests==2.32.3
