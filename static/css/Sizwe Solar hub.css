@@ -1,0 +1,36 @@
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa; /* Light mode background */
+            color: #343a40; /* Dark text for contrast */
+        }
+        .hero {
+            background-color: #FFA500; /* Orange highlight color */
+            color: white;
+            padding: 64px 16px; /* Padding multiples of 8px */
+            text-align: center; 
+        }
+        .feature-icon{
+            font-size: 48px;
+            color: #FFA500;
+        }
+        .card {
+            transition: transform 0.3s ease; /* Smooth hover animation */
+        }
+        .card:hover {
+            transform: scale(1.05);
+        }
+
+        /* Responsive Design Tweaks */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 32px 16px; 
+            }
+            img {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+
+
+    

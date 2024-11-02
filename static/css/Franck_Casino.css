@@ -1,0 +1,44 @@
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa; /* Light mode background */
+            color: #212529; /* Dark text for contrast */
+        }
+        .hero {
+            background-color: #0000FF;
+            color: white;
+            padding: 64px 16px; /* Multiples of 8px */
+            text-align: center;
+        }
+        .hero-image {
+            animation: fadeIn 1s ease-in-out; /* Fade-in animation */
+            max-width: 300px; /* Limit image width */
+            border-radius: 50%; /* Make image circular */
+            margin: 32px auto; /* Center the image */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .content {
+            padding: 32px 16px; /* Multiples of 8px */
+        }
+
+        .btn-primary {
+            background-color: #0000FF;
+            border-color: #0000FF;
+        }
+
+        .material-icons{ /* Style for icons if needed */
+           vertical-align: middle;
+           margin-right: 8px;
+        }
+
+
+    

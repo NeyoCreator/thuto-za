@@ -1,0 +1,91 @@
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>
+   Seganes Butchery
+  </title>
+  <style>
+   body {
+            background-color: #1e1e1e; /* Dark background */
+            color: #eee; /* Light text */
+            font-family: sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Ensure full viewport height */
+        }
+
+        header {
+            background-color: #282828; /* Slightly lighter dark background for header */
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #00FF00; /* Green title */
+        }
+
+        main {
+            flex: 1; /* Allow main content to take up remaining space */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .hero-section {
+            text-align: center;
+        }
+
+
+        .hero-section p {
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+
+        footer {
+            background-color: #282828;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.8em;
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .hero-section p {
+                font-size: 1em;
+            }
+        }
+  </style>
+ </head>
+ <body>
+  <header>
+   <h1>
+    Seganes Butchery
+   </h1>
+  </header>
+  <main>
+   <div class="hero-section">
+    <p>
+     We provide meat to local spaces.
+    </p>
+    <!--  You can add more content here, like images, buttons, etc. -->
+    <img alt="Butcher Shop Image" src="butcher-shop.jpg" style="display: block; margin: 20px auto;" width="500"/>
+    <!-- Example image -->
+    <button style="background-color: #00FF00; color: #1e1e1e; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+     Learn More
+    </button>
+    <!-- Example button -->
+   </div>
+  </main>
+  <footer>
+   © 2023 Seganes Butchery. All rights reserved.
+  </footer>
+ </body>
+</html>

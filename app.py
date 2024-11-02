@@ -1,22 +1,30 @@
+import base64
 from flask import Flask, render_template, request, jsonify, send_file
 from flask_cors import CORS
 import os
 import json
 from langchain_google_genai import GoogleGenerativeAI
 import logging
+from bs4 import BeautifulSoup
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+
 app = Flask(__name__)
 CORS(app)
+
 
 # In-memory store for user sessions
 user_data = {}
 
 # Folder where generated files will be stored
 GENERATED_FOLDER = "generated_sites"
+
+# Path to save uploaded images
+UPLOAD_FOLDER = 'generated_websites'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 if not os.path.exists(GENERATED_FOLDER):
     os.makedirs(GENERATED_FOLDER)
@@ -33,761 +41,193 @@ functionality_options = ["Red", "Green", "Blue", "Orange", "purple"]
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return "Hello, it’s THUTO here..."
+
+
+
+from bs4 import BeautifulSoup  # Import BeautifulSoup for HTML parsing
 
 @app.route('/chat', methods=['POST'])
 def chat():
     logger.info("Received a POST request to /chat")
-    user_input = request.json.get("message")
-    user_id = request.json.get("user_id")
+    user_input = request.json.get("inputs")
+    
+    # Extract image data list from the input
+    image_data_list = user_input.get("businessImages", [])
+    print("image_data_list: ", image_data_list)
 
-    # Log the received input
-    logger.debug(f"Received input from user {user_id}: {user_input}")
+    # Prepare the folder to save images in 'static/images'
+    static_image_folder = os.path.join('static', 'images')
+    os.makedirs(static_image_folder, exist_ok=True)  # Ensure the folder exists
 
-    # Initialize session for new user
-    if user_id not in user_data:
-        logger.debug(f"Initializing session for new user: {user_id}")
-        user_data[user_id] = {"phase": 1, "responses": {}}
+    image_paths = []  # List to store relative paths of uploaded images
+
+    # Loop through each image and save it in the 'static/images' folder
+    for i, image_data in enumerate(image_data_list):
+        img_data = base64.b64decode(image_data.split(',')[1])  # Decode base64 image data
+        image_filename = f"uploaded_image_{i}.jpg"  # Unique filename for each image
+        image_path = os.path.join(static_image_folder, image_filename)  # Full path to save the image
+        
+        # Save the image to the specified path
+        with open(image_path, 'wb') as img_file:
+            img_file.write(img_data)
+        
+        # Store the relative path to use in HTML
+        image_paths.append(f"/static/images/{image_filename}")
+
+    print("image_paths: ", image_paths)
+
+    # Default user key setup
+    default_user_key = "default_user"
+
+    if default_user_key not in user_data:
+        logger.debug(f"Initializing session for new user: {default_user_key}")
+        user_data[default_user_key] = {"phase": 1, "responses": {}}
     else:
-        logger.debug(f"User {user_id} already exists. Current phase: {user_data[user_id]['phase']}")
+        logger.debug(f"User already exists. Current phase: {user_data[default_user_key]['phase']}")
 
-    phase = user_data[user_id]["phase"]
-    logger.debug(f"Current phase for user {user_id}: {phase}")
+    if user_input:
+        logger.debug("user-data: %s", user_input)
 
-    if phase == 1:
-        user_data[user_id]["responses"]["website_type"] = user_input
-        user_data[user_id]["phase"] = 2
-        logger.info(f"Phase 1 completed. User {user_id} selected website type: {user_input}")
-        return jsonify({
-            "message": "Please select the background theme of your website.",
-            "suggestions": color_palettes,
-            "nextStep": 2
-        })
+        # Update user responses
+        user_data[default_user_key]["responses"] = {
+            "website_type": user_input.get("websiteType"),
+            "theme": user_input.get("backgroundTheme"),
+            "main_colour": user_input.get("mainColor"),
+            "websiteName": user_input.get("websiteName"),
+            "contactDetails": user_input.get("contactDetails"),
+            "websiteContent": user_input.get("websiteContent"),
+        }
 
-    elif phase == 2:
-        user_data[user_id]["responses"]["main_colour"] = user_input
-        user_data[user_id]["phase"] = 3
-        logger.info(f"Phase 2 completed. User {user_id} selected the main colour: {user_input}")
-        return jsonify({
-            "message": "Please select the main colour of your website.",
-            "suggestions": functionality_options,
-            "nextStep": 3
-        })
+        response_summary = user_data[default_user_key]["responses"]
 
-    elif phase == 3:
-        user_data[user_id]["responses"]["content"] = user_input
-        user_data[user_id]["phase"] = 4
-        logger.info(f"Phase 3 completed. User {user_id} selected functionality: {user_input}")
-        return jsonify({
-            "message": "Is there any additional information you'd like to add about your website?",
-            "phase": 4,
-            "nextStep": 4
-        })
+        # Prepare the website description
+        website_description = f"""Could you generate a {response_summary['website_type']} website.
+                                  Make it have the following color palette: {response_summary['main_colour']}.
+                                  Make it have the following theme: {response_summary['theme']} as the primary color.
+                                  It should have as its additional information: {response_summary['websiteName']}, 
+                                  {response_summary['contactDetails']}, {response_summary['websiteContent']}."""
 
-    elif phase == 4:
-        user_data[user_id]["responses"]["additional_info"] = user_input
-        response_summary = user_data[user_id]["responses"]
-        logger.info(f"Phase 4 completed. User {user_id} provided additional info: {user_input}")
+        logger.info("========Generating values")
+        api_key = os.getenv("GOOGLE_API_KEY")
+        llm = GoogleGenerativeAI(model="gemini-1.5-pro-latest", api_key=api_key)
+        
+        descriptive_descrition_prompt = f"""
+                                    You are a copywriter. Can you generate simple but 
+                                    descriptive content based on this: {response_summary['websiteContent']}
+                                """
+        
+        response_description = llm.invoke(descriptive_descrition_prompt)
+        print("response_description", response_description)
 
-        # Generate the website
-        website_title = f"{response_summary['website_type']} Website"
-        website_description = f"Could you generate a {response_summary['website_type']} website. Make it have the {response_summary['main_colour']} as the primary colour and als generate a color pallet that matches. It should have {response_summary['content']} as its conten"
-        website_metadata = [{"website_type":response_summary['website_type']},["main_colour"]]
-        logger.debug(f"Website metadata: {website_metadata}")
+        # Create prompt for generating website
+        prompt = f"""Generate a modern website with HTML and CSS based on these details:
+                     Structure: {response_summary['website_type']},
+                     Content: {response_description},
+                     Name: {response_summary['websiteName']},
+                     Color: {response_summary['main_colour']},
+                     Theme: {response_summary['theme']}.
+                     - Include the following images: {image_paths}. Make sure to source 
+                       the uploaded file in the in the following directory /static/images/.
+                       If it containes multile images lease implement required UI.
+                     - Prioritze using icons that will be suitable to the website, you can use from: https://fonts.google.com/icons
+                     - Prioritze using font that will be suitable for teh website, you can use from: https://fonts.google.com/
+                     - Prioritze using using styling from Bootstrap: https://getbootstrap.com/
+                     - Ensure padding follows spacing of multiples of 32px.
+                     - Add animations if possible to make it engaging.
+                     - Prioritze the website can be viewed from mobile devices.
+                  """
 
-        logger.debug(f"Generating website with title: {website_title} and description: {website_description}")
+        response = llm.invoke(prompt)
 
-        generated_files = generate_website_files(website_title, website_description)
-        if generated_files:
-            populate_user_website(generated_files)
-            logger.info(f"Website generated successfully for user {user_id}.")
+        # Extract and clean the HTML content from response
+        generated_html = response.get('html', '') if isinstance(response, dict) else response
+        soup = BeautifulSoup(generated_html, 'html.parser')
+
+        # Extract CSS from <style> tags
+        style_tags = soup.find_all('style')
+        extracted_css = "\n".join(tag.string for tag in style_tags if tag.string)
+
+        # Remove the <style> tags from the HTML
+        for tag in style_tags:
+            tag.decompose()
+
+        # Save the cleaned CSS to a file in 'static/css'
+        os.makedirs('static/css', exist_ok=True)
+        css_file_path = os.path.join('static/css', f"{response_summary['websiteName']}.css")
+        
+        with open(css_file_path, 'w') as css_file:
+            css_file.write(extracted_css)
+
+        # Add a link to the external CSS file in the HTML <head>
+        css_link_tag = soup.new_tag("link", rel="stylesheet", href=f"/static/css/{response_summary['websiteName']}.css")
+        if soup.head:
+            soup.head.append(css_link_tag)
         else:
-            logger.error("There was an error generating the website.")
-            return jsonify({"message": "There was an error generating the website."}), 500
+            head_tag = soup.new_tag("head")
+            head_tag.append(css_link_tag)
+            soup.insert(0, head_tag)
 
-        # Reset the user data after completion
-        user_data.pop(user_id, None)
-        logger.debug(f"User data for {user_id} has been reset after website generation.")
+        # Save the updated HTML content
+        cleaned_html = str(soup)
+        cleaned_html = extract_html_content(cleaned_html)
+        os.makedirs('generated_websites', exist_ok=True)
+        html_file_path = os.path.join('generated_websites', f"{response_summary['websiteName']}.html")
+        html_user_path = os.path.join('templates', "userwebsite.html")
+
+        with open(html_file_path, 'w') as html_file:
+            html_file.write(cleaned_html)
+
+        with open(html_user_path, 'w') as html_file:
+            html_file.write(cleaned_html)
 
         return jsonify({
-            # "message": "Your website has been generated! You can view it using the following link: https://thuto-chat.azurewebsites.net/view_website",
-            "message": "Your website has been generated! You can view it using the following link: http://localhost:5000//view_website",
-            
-            "link": "/view_website",
+            "message": "Your website has been generated! You can view it using the following link.",
+            "link": f"/generated_websites/{response_summary['websiteName']}.html",
+            "css_link": f"/static/css/{response_summary['websiteName']}.css",
             "phase": 5
         })
+    else:
+        logger.error("Invalid input format received.")
+        return jsonify({"message": "Invalid input format. Please provide all required information."}), 400
+
+
+
+def extract_html_content(content):
+    """Extract only the HTML structure from the response text."""
+    soup = BeautifulSoup(content, 'html.parser')
+    
+    # Find the first <html> tag and its content
+    html_tag = soup.find('html')
+    if html_tag:
+        return html_tag.prettify()
+    
+    # If no <html> tag is found, return cleaned content as-is
+    return content.strip()
 
 def generate_website_files(website_title, website_description):
+    print("printing teh value")
     api_key = os.getenv("GOOGLE_API_KEY")
     llm = GoogleGenerativeAI(model="gemini-1.5-pro-latest", api_key=api_key)
-    
-    portfolio=""""
-        <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>My Portfolio</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-        <header>
-            <h1>Neo M</h1>
-            <p>Software Engineer & Web Developer</p>
-        </header>
 
-        <nav>
-            <ul>
-                <li><a href="#about">About Me</a></li>
-                <li><a href="#skills">Skills</a></li>
-                <li><a href="#projects">Projects</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-
-        <section id="about">
-            <h2>About Me</h2>
-            <p>Hello! I'm Neo, a passionate web developer with experience in creating responsive and modern websites. My journey started with building small applications, and now I'm focused on helping businesses grow through digital solutions.</p>
-        </section>
-
-        <section id="skills">
-            <h2>Skills</h2>
-            <div class="skills-grid">
-                <div>HTML</div>
-                <div>CSS</div>
-                <div>JavaScript</div>
-                <div>React</div>
-                <div>Python</div>
-                <div>Flask</div>
-                <div>SQL</div>
-                <div>Firebase</div>
-            </div>
-        </section>
-
-        <section id="projects">
-            <h2>Projects</h2>
-            <div class="project-grid">
-                <div class="project">
-                    <h3>Project 1</h3>
-                    <p>A website builder designed for small businesses.</p>
-                </div>
-                <div class="project">
-                    <h3>Project 2</h3>
-                    <p>An AI-driven chatbot that provides customer support.</p>
-                </div>
-                <div class="project">
-                    <h3>Project 3</h3>
-                    <p>A platform that automates IT audit tasks for efficiency.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="contact">
-            <h2>Contact Me</h2>
-            <p>If you'd like to work together or just say hello, feel free to reach out!</p>
-            <button><a href="mailto:neo@example.com">Send Email</a></button>
-        </section>
-
-        <footer>
-            <p>&copy; 2024 Neo M. All rights reserved.</p>
-        </footer>
-    </body>
-    </html>
-    ============
-    /* Reset */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    /* General Styles */
-    body {
-        font-family: Arial, sans-serif;
-        line-height: 1.6;
-        color: #333;
-        background-color: #f4f4f9;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-    }
-
-    /* Header */
-    header {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    header h1 {
-        font-size: 2.5em;
-        color: #444;
-    }
-
-    header p {
-        font-size: 1.2em;
-        color: #666;
-    }
-
-    /* Navigation */
-    nav {
-        margin: 20px 0;
-    }
-
-    nav ul {
-        display: flex;
-        list-style: none;
-        gap: 15px;
-    }
-
-    nav ul li a {
-        text-decoration: none;
-        color: #444;
-        font-weight: bold;
-    }
-
-    nav ul li a:hover {
-        color: #007bff;
-    }
-
-    /* Sections */
-    section {
-        margin: 40px 0;
-        width: 100%;
-        max-width: 800px;
-        text-align: center;
-    }
-
-    section h2 {
-        font-size: 1.8em;
-        color: #333;
-        margin-bottom: 10px;
-    }
-
-    section p {
-        color: #666;
-    }
-
-    /* Skills Section */
-    .skills-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 10px;
-        margin-top: 10px;
-    }
-
-    .skills-grid div {
-        padding: 10px;
-        background: #007bff;
-        color: white;
-        border-radius: 5px;
-    }
-
-    /* Projects Section */
-    .project-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-top: 10px;
-    }
-
-    .project {
-        background: #e9ecef;
-        padding: 15px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .project h3 {
-        font-size: 1.2em;
-        color: #333;
-    }
-
-    .project p {
-        font-size: 0.9em;
-        color: #555;
-    }
-
-    /* Contact Section */
-    button {
-        padding: 10px 20px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 1em;
-        cursor: pointer;
-        margin-top: 15px;
-    }
-
-    button a {
-        text-decoration: none;
-        color: white;
-    }
-
-    button:hover {
-        background: #0056b3;
-    }
-
-    /* Footer */
-    footer {
-        margin-top: 40px;
-        text-align: center;
-        color: #777;
-    }
-
-
-        """
-
-
-    blog="""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>My Blog</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-        <header>
-            <h1>Neo's Blog</h1>
-            <p>Insights, stories, and updates from my journey in tech.</p>
-        </header>
-
-        <nav>
-            <ul>
-                <li><a href="#about">About</a></li>
-                <li><a href="#posts">Blog Posts</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-
-        <section id="about">
-            <h2>About Me</h2>
-            <p>Hello! I'm Neo, a software engineer with a passion for coding, learning, and sharing knowledge. Through this blog, I share my insights and experiences on topics ranging from web development to AI.</p>
-        </section>
-
-        <section id="posts">
-            <h2>Latest Blog Posts</h2>
-            <div class="post">
-                <h3>Understanding Responsive Design</h3>
-                <p>Responsive design is essential for modern web development. In this post, I'll cover the basics of making your website adaptable to different screen sizes...</p>
-                <button><a href="#">Read More</a></button>
-            </div>
-            <div class="post">
-                <h3>Getting Started with React Native</h3>
-                <p>React Native is a popular framework for building mobile apps. Here’s a beginner’s guide to get you up and running...</p>
-                <button><a href="#">Read More</a></button>
-            </div>
-            <div class="post">
-                <h3>The Power of Flask for Back-end Development</h3>
-                <p>Flask is a lightweight web framework for Python. In this article, I explore why Flask is a great choice for backend projects...</p>
-                <button><a href="#">Read More</a></button>
-            </div>
-        </section>
-
-        <section id="contact">
-            <h2>Contact</h2>
-            <p>Have questions or want to connect? Feel free to reach out!</p>
-            <button><a href="mailto:neo@example.com">Send Email</a></button>
-        </section>
-
-        <footer>
-            <p>&copy; 2024 Neo's Blog. All rights reserved.</p>
-        </footer>
-    </body>
-    </html>
-    =============
-    /* Reset */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    /* General Styles */
-    body {
-        font-family: Arial, sans-serif;
-        color: #333;
-        background-color: #f4f4f9;
-        line-height: 1.6;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-    }
-
-    /* Header */
-    header {
-        text-align: center;
-        margin-bottom: 20px;
-    }
-
-    header h1 {
-        font-size: 2.5em;
-        color: #444;
-    }
-
-    header p {
-        font-size: 1.2em;
-        color: #666;
-    }
-
-    /* Navigation */
-    nav {
-        margin: 20px 0;
-    }
-
-    nav ul {
-        display: flex;
-        list-style: none;
-        gap: 15px;
-    }
-
-    nav ul li a {
-        text-decoration: none;
-        color: #444;
-        font-weight: bold;
-    }
-
-    nav ul li a:hover {
-        color: #007bff;
-    }
-
-    /* Sections */
-    section {
-        margin: 40px 0;
-        width: 100%;
-        max-width: 800px;
-        text-align: center;
-    }
-
-    section h2 {
-        font-size: 1.8em;
-        color: #333;
-        margin-bottom: 10px;
-    }
-
-    section p {
-        color: #666;
-    }
-
-    /* Blog Posts Section */
-    .post {
-        background: #e9ecef;
-        padding: 20px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .post h3 {
-        font-size: 1.5em;
-        color: #333;
-        margin-bottom: 5px;
-    }
-
-    .post p {
-        font-size: 1em;
-        color: #555;
-        margin-bottom: 10px;
-    }
-
-    button {
-        padding: 10px 20px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 1em;
-        cursor: pointer;
-    }
-
-    button a {
-        text-decoration: none;
-        color: white;
-    }
-
-    button:hover {
-        background: #0056b3;
-    }
-
-    /* Footer */
-    footer {
-        margin-top: 40px;
-        text-align: center;
-        color: #777;
-    }
-
-        """
-        
-        
-    landingpage="""
-        <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Landing Page</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-        <header>
-            <h1>Welcome to Neo's Solutions</h1>
-            <p>Your partner in building digital success.</p>
-            <button><a href="#features">Learn More</a></button>
-        </header>
-
-        <nav>
-            <ul>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#testimonials">Testimonials</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </nav>
-
-        <section id="features">
-            <h2>Features</h2>
-            <div class="features-grid">
-                <div class="feature">
-                    <h3>Custom Websites</h3>
-                    <p>Beautiful, responsive websites designed to elevate your brand.</p>
-                </div>
-                <div class="feature">
-                    <h3>Mobile Applications</h3>
-                    <p>Cross-platform mobile apps tailored to your business needs.</p>
-                </div>
-                <div class="feature">
-                    <h3>AI Solutions</h3>
-                    <p>Unlock the power of AI to streamline and scale your business operations.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="testimonials">
-            <h2>What Our Clients Say</h2>
-            <div class="testimonial">
-                <p>"Neo's Solutions transformed our online presence with a stunning website!"</p>
-                <span>- Alex, Business Owner</span>
-            </div>
-            <div class="testimonial">
-                <p>"Their mobile app development is top-notch. We've seen a 30% increase in customer engagement."</p>
-                <span>- Taylor, Startup Founder</span>
-            </div>
-            <div class="testimonial">
-                <p>"The AI solutions provided by Neo's team have saved us countless hours and improved productivity."</p>
-                <span>- Jordan, Operations Manager</span>
-            </div>
-        </section>
-
-        <section id="contact">
-            <h2>Get in Touch</h2>
-            <p>Ready to take your business to the next level? Contact us today!</p>
-            <button><a href="mailto:neo@example.com">Contact Us</a></button>
-        </section>
-
-        <footer>
-            <p>&copy; 2024 Neo's Solutions. All rights reserved.</p>
-        </footer>
-    </body>
-    </html>
-    ==========================================
-    /* Reset */
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    /* General Styles */
-    body {
-        font-family: Arial, sans-serif;
-        line-height: 1.6;
-        color: #333;
-        background-color: #f4f4f9;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-    }
-
-    /* Header */
-    header {
-        text-align: center;
-        padding: 60px 20px;
-        background-color: #007bff;
-        color: white;
-        border-radius: 5px;
-    }
-
-    header h1 {
-        font-size: 2.5em;
-    }
-
-    header p {
-        font-size: 1.2em;
-        margin-top: 10px;
-    }
-
-    header button {
-        padding: 10px 20px;
-        background: white;
-        color: #007bff;
-        border: none;
-        border-radius: 5px;
-        font-size: 1em;
-        cursor: pointer;
-        margin-top: 20px;
-    }
-
-    header button a {
-        text-decoration: none;
-        color: #007bff;
-    }
-
-    header button:hover {
-        background: #0056b3;
-        color: white;
-    }
-
-    /* Navigation */
-    nav {
-        margin: 20px 0;
-    }
-
-    nav ul {
-        display: flex;
-        list-style: none;
-        gap: 15px;
-    }
-
-    nav ul li a {
-        text-decoration: none;
-        color: #444;
-        font-weight: bold;
-    }
-
-    nav ul li a:hover {
-        color: #007bff;
-    }
-
-    /* Features Section */
-    #features {
-        text-align: center;
-        margin: 40px 0;
-        width: 100%;
-        max-width: 800px;
-    }
-
-    #features h2 {
-        font-size: 1.8em;
-        color: #333;
-    }
-
-    .features-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    .feature {
-        background: #e9ecef;
-        padding: 15px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .feature h3 {
-        font-size: 1.2em;
-        color: #333;
-    }
-
-    /* Testimonials Section */
-    #testimonials {
-        text-align: center;
-        margin: 40px 0;
-        width: 100%;
-        max-width: 800px;
-    }
-
-    #testimonials h2 {
-        font-size: 1.8em;
-        color: #333;
-    }
-
-    .testimonial {
-        margin: 20px 0;
-        padding: 15px;
-        background: #f4f4f9;
-        border-left: 4px solid #007bff;
-        color: #555;
-    }
-
-    .testimonial span {
-        display: block;
-        margin-top: 10px;
-        font-size: 0.9em;
-        color: #777;
-    }
-
-    /* Contact Section */
-    #contact {
-        text-align: center;
-        margin: 40px 0;
-        width: 100%;
-        max-width: 800px;
-    }
-
-    button {
-        padding: 10px 20px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 1em;
-        cursor: pointer;
-        margin-top: 15px;
-    }
-
-    button a {
-        text-decoration: none;
-        color: white;
-    }
-
-    button:hover {
-        background: #0056b3;
-    }
-
-    /* Footer */
-    footer {
-        margin-top: 40px;
-        text-align: center;
-        color: #777;
-    }
-        """
-            
-            
-            
+    # print("printing teh value, ",website_description)       
     prompt = f"""
-    Generate a simple website with HTML and CSS:
+    Generate a modern website with HTML and CSS:
+    please elaborate on teh desritions and content of the website,
+    you can add elements such as header, cards etc.. to better visualize the website.
+    please don't include any explanations.
+
 
     - Description: "{website_description}".
-
-    If the user stated that they wanted a Portfolio use the following content as a guide : {portfolio},
-    If the user stated that they wanted a blog use the following content as a guide : {blog},
-    If the user stated that they wanted a landingpage use the following content as a guide : {landingpage},
 
     Provide the output as a JSON object with two fields:
     1. 'html': The HTML content of the webpage.
     2. 'css': The CSS content for styling the webpage.
     """
 
-    
     response = llm.invoke(prompt)
     try:
-        print("Response: ", response)
+        # print("Response: ", response)
         json_response = json.loads(response)
         return {
             "html": json_response.get("html"),
@@ -824,96 +264,6 @@ def view_website():
     # Render the user-generated website from the 'userwebsite.html' file
     return render_template('userwebsite.html')
 
-def create_flask_app(website_title, generated_files):
-    logger.info(f"Creating Flask app for {website_title}")
-    logger.debug(f"Keys in generated_files: {generated_files.keys()}")
-    
-    app_dir = os.path.join('generated_sites', website_title)
-    os.makedirs(app_dir, exist_ok=True)
-    logger.debug(f"Created directory: {app_dir}")
-
-    # Create the templates directory if it doesn't exist
-    os.makedirs(os.path.join(app_dir, 'templates'), exist_ok=True)
-    logger.debug(f"Created templates directory: {os.path.join(app_dir, 'templates')}")
-    
-    # Write the index.html file
-    if 'templates/index.html' in generated_files:
-        with open(os.path.join(app_dir, 'templates', 'index.html'), 'w') as f:
-            f.write(generated_files['templates/index.html'])
-        logger.info("Successfully wrote index.html")
-    else:
-        logger.warning("'templates/index.html' not found in generated_files")
-        # You might want to handle this error case appropriately
-        # For example, you could create a default index.html content
-        with open(os.path.join(app_dir, 'templates', 'index.html'), 'w') as f:
-            f.write("<html><body><h1>Default Page</h1><p>Content not generated.</p></body></html>")
-        logger.info("Wrote default index.html")
-    
-    # Write the app.py file
-    if 'app.py' in generated_files:
-        with open(os.path.join(app_dir, 'app.py'), 'w') as f:
-            f.write(generated_files['app.py'])
-        logger.info("Successfully wrote app.py")
-    else:
-        logger.warning("'app.py' not found in generated_files")
-    
-    # Create the static directory and write the style.css file
-    if 'static/style.css' in generated_files:
-        os.makedirs(os.path.join(app_dir, 'static'), exist_ok=True)
-        with open(os.path.join(app_dir, 'static', 'style.css'), 'w') as f:
-            f.write(generated_files['static/style.css'])
-        logger.info("Successfully wrote style.css")
-    else:
-        logger.warning("'static/style.css' not found in generated_files")
-        # You might want to handle this error case appropriately
-        # For example, you could create a default style.css content
-        os.makedirs(os.path.join(app_dir, 'static'), exist_ok=True)
-        with open(os.path.join(app_dir, 'static', 'style.css'), 'w') as f:
-            f.write("/* Default styles */\nbody { font-family: Arial, sans-serif; }")
-        logger.info("Wrote default style.css")
-    
-    logger.info(f"Flask app creation for {website_title} completed")
-
-
-def generate_website_files(website_title, website_description):
-    api_key = os.getenv("GOOGLE_API_KEY")
-    llm = GoogleGenerativeAI(model="gemini-1.5-pro-latest", api_key=api_key)
-    print("website description :", website_description)
-    prompt = f"""
-    Generate a simple website with HTML and CSS:
-    - Title: "{website_title}"
-    - Description: "{website_description}"
-
-    Provide the output as a JSON object with two fields:
-    1. 'html': The HTML content of the webpage.
-    2. 'css': The CSS content for styling the webpage.
-    
-    Please only include the chtml and css no explanations.
-    """
-
-    response = llm.invoke(prompt)
-    print("Response:", response[3])
-
-
-    # If the response starts with 'j', remove the first four characters
-    if response[3]=='j':
-        print("yes there is json")
-        response = response[7:]
-        # Clean the last 3 characters
-        response = response[:-3]
-        print("Modified response after removing the last 3 characters:", response)
-
-    try:
-        # print("Response:", response)
-        json_response = json.loads(response)
-        return {
-            "html": json_response.get("html"),
-            "css": json_response.get("css")
-        }
-    except json.JSONDecodeError as e:
-        print(f"Error: Unable to parse JSON response. Details: {str(e)}")
-        return None
-
 def populate_user_website(generated_files):
     # Populate the 'userwebsite.html' file with the generated HTML and CSS content
     html_content = generated_files.get("html", "<h1>Error generating HTML content</h1>")
@@ -935,62 +285,6 @@ def populate_user_website(generated_files):
 </body>
 </html>
         """)
-
-# @app.route('/view_website')
-# def view_website():
-#     # Render the user-generated website from the 'userwebsite.html' file
-#     return render_template('userwebsite.html')
-
-def create_flask_app(website_title, generated_files):
-    logger.info(f"Creating Flask app for {website_title}")
-    logger.debug(f"Keys in generated_files: {generated_files.keys()}")
-    
-    app_dir = os.path.join('generated_sites', website_title)
-    os.makedirs(app_dir, exist_ok=True)
-    logger.debug(f"Created directory: {app_dir}")
-
-    # Create the templates directory if it doesn't exist
-    os.makedirs(os.path.join(app_dir, 'templates'), exist_ok=True)
-    logger.debug(f"Created templates directory: {os.path.join(app_dir, 'templates')}")
-    
-    # Write the index.html file
-    if 'templates/index.html' in generated_files:
-        with open(os.path.join(app_dir, 'templates', 'index.html'), 'w') as f:
-            f.write(generated_files['templates/index.html'])
-        logger.info("Successfully wrote index.html")
-    else:
-        logger.warning("'templates/index.html' not found in generated_files")
-        # You might want to handle this error case appropriately
-        # For example, you could create a default index.html content
-        with open(os.path.join(app_dir, 'templates', 'index.html'), 'w') as f:
-            f.write("<html><body><h1>Default Page</h1><p>Content not generated.</p></body></html>")
-        logger.info("Wrote default index.html")
-    
-    # Write the app.py file
-    if 'app.py' in generated_files:
-        with open(os.path.join(app_dir, 'app.py'), 'w') as f:
-            f.write(generated_files['app.py'])
-        logger.info("Successfully wrote app.py")
-    else:
-        logger.warning("'app.py' not found in generated_files")
-    
-    # Create the static directory and write the style.css file
-    if 'static/style.css' in generated_files:
-        os.makedirs(os.path.join(app_dir, 'static'), exist_ok=True)
-        with open(os.path.join(app_dir, 'static', 'style.css'), 'w') as f:
-            f.write(generated_files['static/style.css'])
-        logger.info("Successfully wrote style.css")
-    else:
-        logger.warning("'static/style.css' not found in generated_files")
-        # You might want to handle this error case appropriately
-        # For example, you could create a default style.css content
-        os.makedirs(os.path.join(app_dir, 'static'), exist_ok=True)
-        with open(os.path.join(app_dir, 'static', 'style.css'), 'w') as f:
-            f.write("/* Default styles */\nbody { font-family: Arial, sans-serif; }")
-        logger.info("Wrote default style.css")
-    
-    logger.info(f"Flask app creation for {website_title} completed")
-
 
 # Endpoint to handle chat updates and modify userwebsite.html
 @app.route('/update_website', methods=['POST'])
